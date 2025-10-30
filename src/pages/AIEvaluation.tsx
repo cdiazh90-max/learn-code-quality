@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import { Brain, Globe, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const AIEvaluation = () => {
   const [url, setUrl] = useState("");
@@ -71,7 +73,123 @@ const AIEvaluation = () => {
   };
 
   const generatePDF = () => {
-    toast.info("Funcionalidad de PDF en desarrollo");
+    if (!results) {
+      toast.error("Realiza una evaluación primero");
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // Header
+      doc.setFillColor(59, 130, 246);
+      doc.rect(0, 0, pageWidth, 40, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.text("EduSoftware", pageWidth / 2, 15, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.text("Reporte de Evaluación con IA", pageWidth / 2, 28, { align: 'center' });
+      
+      // Site info
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(12);
+      let yPos = 50;
+      doc.text(`Sitio: ${results.siteName}`, 20, yPos);
+      yPos += 7;
+      doc.text(`URL: ${results.url}`, 20, yPos);
+      yPos += 7;
+      doc.text(`Fecha: ${results.timestamp}`, 20, yPos);
+      yPos += 15;
+      
+      // Overall score box
+      doc.setFillColor(240, 240, 240);
+      doc.roundedRect(20, yPos, pageWidth - 40, 30, 3, 3, 'F');
+      doc.setFontSize(14);
+      doc.text("Puntuación General:", 25, yPos + 12);
+      doc.setFontSize(28);
+      doc.setTextColor(59, 130, 246);
+      doc.text(`${results.overallScore}/10`, pageWidth / 2, yPos + 20, { align: 'center' });
+      
+      yPos += 40;
+      
+      // Bar chart
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.text("Puntuaciones por Criterio", 20, yPos);
+      yPos += 10;
+      
+      const chartHeight = 80;
+      const barWidth = (pageWidth - 50) / results.scores.length;
+      const maxScore = 10;
+      
+      results.scores.forEach((score: any, index: number) => {
+        const barHeight = (score.score / maxScore) * chartHeight;
+        const xPos = 20 + (index * barWidth) + 5;
+        
+        // Draw bar
+        doc.setFillColor(59, 130, 246);
+        doc.rect(xPos, yPos + chartHeight - barHeight, barWidth - 10, barHeight, 'F');
+        
+        // Score label
+        doc.setFontSize(10);
+        doc.text(`${score.score}`, xPos + (barWidth - 10) / 2, yPos + chartHeight - barHeight - 3, { align: 'center' });
+      });
+      
+      // X-axis labels
+      doc.setFontSize(8);
+      results.scores.forEach((score: any, index: number) => {
+        const xPos = 20 + (index * barWidth) + 5;
+        const words = score.name.split(' ');
+        words.forEach((word: string, i: number) => {
+          doc.text(word, xPos + (barWidth - 10) / 2, yPos + chartHeight + 8 + (i * 4), { align: 'center' });
+        });
+      });
+      
+      yPos += chartHeight + 25;
+      
+      // Detailed scores table
+      doc.setFontSize(14);
+      doc.text("Detalle de Evaluación", 20, yPos);
+      yPos += 5;
+      
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Criterio', 'Puntuación', 'Descripción']],
+        body: results.scores.map((score: any) => [
+          score.name,
+          `${score.score}/10`,
+          score.description
+        ]),
+        headStyles: { fillColor: [59, 130, 246] },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+      });
+      
+      // Recommendations
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+      doc.setFontSize(14);
+      doc.text("Recomendaciones", 20, yPos);
+      yPos += 7;
+      
+      doc.setFontSize(10);
+      results.recommendations.forEach((rec: string, index: number) => {
+        doc.text(`${index + 1}. ${rec}`, 25, yPos);
+        yPos += 7;
+      });
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.setTextColor(128, 128, 128);
+      doc.text("Generado por EduSoftware - Basado en ISO/IEC 25010", pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+      
+      doc.save(`evaluacion-ia-${results.siteName.replace(/\s+/g, '-')}.pdf`);
+      toast.success("PDF descargado exitosamente");
+    } catch (error) {
+      console.error("Error generando PDF:", error);
+      toast.error("Error al generar el PDF");
+    }
   };
 
   return (
