@@ -20,19 +20,30 @@ const Video = () => {
 
           {/* Video Container */}
           <Card className="p-0 overflow-hidden">
-            <div className="aspect-video bg-muted">
-              <iframe 
-                width="100%" 
-                height="100%" 
-                src="https://www.youtube.com/embed/PKvBwcL5RZU" 
-                title="Video Tutorial - Calidad de Software"
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                allowFullScreen
-                className="w-full h-full"
-              ></iframe>
+            <div className="aspect-video bg-muted flex items-center justify-center">
+              <div className="text-center space-y-4 p-8">
+                <div className="h-20 w-20 rounded-full bg-gradient-primary mx-auto flex items-center justify-center">
+                  <PlayCircle className="h-10 w-10 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Espacio Reservado para Video</h3>
+                  <p className="text-muted-foreground">
+                    Este espacio está preparado para que cargues tu video educativo
+                  </p>
+                </div>
+              </div>
             </div>
           </Card>
+
+          {/* Instructions */}
+          <Alert>
+            <Upload className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Para administradores:</strong> Este espacio está reservado para cargar un video tutorial. 
+              El video puede ser alojado en plataformas como YouTube, Vimeo, o directamente en el servidor. 
+              Simplemente reemplaza este componente con el código embed correspondiente.
+            </AlertDescription>
+          </Alert>
 
 
           {/* Video Description */}
